@@ -29,11 +29,32 @@ const SolicitarAdiantamento = ({ open, onClose, onSuccess }: SolicitarAdiantamen
     setLoading(true);
 
     try {
+      const valor = parseFloat(dados.valor);
+      
+      // Validate input values
+      if (valor <= 0) {
+        toast({
+          title: 'Valor inválido',
+          description: 'O valor deve ser maior que zero.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (valor > 50000) {
+        toast({
+          title: 'Valor muito alto',
+          description: 'O valor máximo permitido é R$ 50.000,00.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('adiantamentos')
         .insert({
           promotor_id: user?.id,
-          valor: parseFloat(dados.valor),
+          valor: valor,
           observacoes: dados.observacoes || null,
         });
 
@@ -76,6 +97,7 @@ const SolicitarAdiantamento = ({ open, onClose, onSuccess }: SolicitarAdiantamen
               type="number"
               step="0.01"
               min="0.01"
+              max="50000"
               placeholder="0,00"
               value={dados.valor}
               onChange={(e) => setDados({ ...dados, valor: e.target.value })}

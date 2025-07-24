@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -24,7 +24,6 @@ const Auth = () => {
     email: '',
     password: '',
     nome_completo: '',
-    tipo_usuario: 'promotor' as 'admin' | 'promotor',
   });
 
   useEffect(() => {
@@ -71,8 +70,7 @@ const Auth = () => {
       const { error } = await signUp(
         signupData.email,
         signupData.password,
-        signupData.nome_completo,
-        signupData.tipo_usuario
+        signupData.nome_completo
       );
       
       if (error) {
@@ -193,23 +191,6 @@ const Auth = () => {
                       onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
                       required
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-tipo">Tipo de Usuário</Label>
-                    <Select 
-                      value={signupData.tipo_usuario} 
-                      onValueChange={(value: 'admin' | 'promotor') => 
-                        setSignupData({ ...signupData, tipo_usuario: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="promotor">Promotor</SelectItem>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

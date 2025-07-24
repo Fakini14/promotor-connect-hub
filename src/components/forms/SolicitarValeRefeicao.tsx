@@ -30,11 +30,32 @@ const SolicitarValeRefeicao = ({ open, onClose, onSuccess }: SolicitarValeRefeic
     setLoading(true);
 
     try {
+      const valor = parseFloat(dados.valor);
+      
+      // Validate input values
+      if (valor <= 0) {
+        toast({
+          title: 'Valor inválido',
+          description: 'O valor deve ser maior que zero.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (valor > 1000) {
+        toast({
+          title: 'Valor muito alto',
+          description: 'O valor máximo permitido é R$ 1.000,00.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('vale_refeicao')
         .insert({
           promotor_id: user?.id,
-          valor: parseFloat(dados.valor),
+          valor: valor,
           data: dados.data,
           observacoes: dados.observacoes || null,
         });
@@ -82,6 +103,7 @@ const SolicitarValeRefeicao = ({ open, onClose, onSuccess }: SolicitarValeRefeic
               type="number"
               step="0.01"
               min="0.01"
+              max="1000"
               placeholder="0,00"
               value={dados.valor}
               onChange={(e) => setDados({ ...dados, valor: e.target.value })}

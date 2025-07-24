@@ -37,14 +37,45 @@ const SolicitarReembolsoKm = ({ open, onClose, onSuccess }: SolicitarReembolsoKm
     setLoading(true);
 
     try {
-      const valorTotal = calcularValorTotal();
+      const kmRodados = parseFloat(dados.km_rodados);
+      const valorPorKm = parseFloat(dados.valor_por_km);
+      
+      // Validate input values
+      if (kmRodados <= 0) {
+        toast({
+          title: 'KM inválido',
+          description: 'Os quilômetros devem ser maior que zero.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (kmRodados > 2000) {
+        toast({
+          title: 'KM muito alto',
+          description: 'O máximo permitido é 2.000 km por solicitação.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (valorPorKm <= 0 || valorPorKm > 10) {
+        toast({
+          title: 'Valor por KM inválido',
+          description: 'O valor por KM deve estar entre R$ 0,01 e R$ 10,00.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      const valorTotal = kmRodados * valorPorKm;
       
       const { error } = await supabase
         .from('reembolsos_km')
         .insert({
           promotor_id: user?.id,
-          km_rodados: parseFloat(dados.km_rodados),
-          valor_por_km: parseFloat(dados.valor_por_km),
+          km_rodados: kmRodados,
+          valor_por_km: valorPorKm,
           valor_total: valorTotal,
           data: dados.data,
           observacoes: dados.observacoes || null,
@@ -94,6 +125,7 @@ const SolicitarReembolsoKm = ({ open, onClose, onSuccess }: SolicitarReembolsoKm
               type="number"
               step="0.1"
               min="0.1"
+              max="2000"
               placeholder="0.0"
               value={dados.km_rodados}
               onChange={(e) => setDados({ ...dados, km_rodados: e.target.value })}
@@ -108,6 +140,7 @@ const SolicitarReembolsoKm = ({ open, onClose, onSuccess }: SolicitarReembolsoKm
               type="number"
               step="0.01"
               min="0.01"
+              max="10"
               value={dados.valor_por_km}
               onChange={(e) => setDados({ ...dados, valor_por_km: e.target.value })}
               required
