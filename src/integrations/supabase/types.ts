@@ -14,7 +14,171 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      adiantamentos: {
+        Row: {
+          created_at: string
+          data_aprovacao: string | null
+          data_solicitacao: string
+          id: string
+          observacoes: string | null
+          promotor_id: string
+          status: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_aprovacao?: string | null
+          data_solicitacao?: string
+          id?: string
+          observacoes?: string | null
+          promotor_id: string
+          status?: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data_aprovacao?: string | null
+          data_solicitacao?: string
+          id?: string
+          observacoes?: string | null
+          promotor_id?: string
+          status?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adiantamentos_promotor_id_fkey"
+            columns: ["promotor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          email: string
+          id: string
+          nome_completo: string
+          telefone: string | null
+          tipo_usuario: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          email: string
+          id: string
+          nome_completo: string
+          telefone?: string | null
+          tipo_usuario: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          nome_completo?: string
+          telefone?: string | null
+          tipo_usuario?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reembolsos_km: {
+        Row: {
+          created_at: string
+          data: string
+          id: string
+          km_rodados: number
+          observacoes: string | null
+          promotor_id: string
+          status: string
+          updated_at: string
+          valor_por_km: number
+          valor_total: number
+        }
+        Insert: {
+          created_at?: string
+          data?: string
+          id?: string
+          km_rodados: number
+          observacoes?: string | null
+          promotor_id: string
+          status?: string
+          updated_at?: string
+          valor_por_km?: number
+          valor_total: number
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          id?: string
+          km_rodados?: number
+          observacoes?: string | null
+          promotor_id?: string
+          status?: string
+          updated_at?: string
+          valor_por_km?: number
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reembolsos_km_promotor_id_fkey"
+            columns: ["promotor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vale_refeicao: {
+        Row: {
+          created_at: string
+          data: string
+          id: string
+          observacoes: string | null
+          promotor_id: string
+          status: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data?: string
+          id?: string
+          observacoes?: string | null
+          promotor_id: string
+          status?: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          id?: string
+          observacoes?: string | null
+          promotor_id?: string
+          status?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vale_refeicao_promotor_id_fkey"
+            columns: ["promotor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
