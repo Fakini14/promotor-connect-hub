@@ -188,6 +188,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      promover_usuario_admin: {
+        Args: { usuario_id: string; novo_tipo: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

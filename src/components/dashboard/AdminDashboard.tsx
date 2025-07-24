@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Users, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { LogOut, Users, DollarSign, Clock, CheckCircle, UserPlus, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Solicitacao {
@@ -31,6 +31,7 @@ interface Promotor {
   email: string;
   telefone?: string;
   ativo: boolean;
+  tipo_usuario: 'admin' | 'promotor';
 }
 
 const AdminDashboard = () => {
@@ -89,11 +90,11 @@ const AdminDashboard = () => {
 
       setSolicitacoesPendentes(todasSolicitacoes);
 
-      // Carregar promotores
+      // Carregar todos os usuários (exceto o admin atual)
       const { data: promotoresData } = await supabase
         .from('profiles')
         .select('*')
-        .eq('tipo_usuario', 'promotor')
+        .neq('id', profile?.id) // Excluir o próprio admin
         .order('nome_completo');
 
       setPromotores(promotoresData as Promotor[] || []);
@@ -190,6 +191,31 @@ const AdminDashboard = () => {
     }
   };
 
+  const promoverUsuario = async (promotor: Promotor, novoTipo: 'admin' | 'promotor') => {
+    try {
+      const { error } = await supabase.rpc('promover_usuario_admin', {
+        usuario_id: promotor.id,
+        novo_tipo: novoTipo
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Role alterado",
+        description: `${promotor.nome_completo} ${novoTipo === 'admin' ? 'promovido a administrador' : 'rebaixado a promotor'} com sucesso.`,
+      });
+      
+      carregarDados();
+    } catch (error: any) {
+      console.error('Erro ao alterar role do usuário:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao alterar role do usuário.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
     toast({
@@ -241,7 +267,7 @@ const AdminDashboard = () => {
               Solicitações Pendentes ({solicitacoesPendentes.length})
             </TabsTrigger>
             <TabsTrigger value="promotores">
-              Promotores ({promotores.length})
+              Usuários ({promotores.length})
             </TabsTrigger>
           </TabsList>
           
@@ -363,9 +389,9 @@ const AdminDashboard = () => {
           <TabsContent value="promotores" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Gestão de Promotores</CardTitle>
+                <CardTitle>Gestão de Usuários</CardTitle>
                 <CardDescription>
-                  Gerencie os promotores cadastrados no sistema
+                  Gerencie usuários e suas permissões no sistema
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -375,31 +401,70 @@ const AdminDashboard = () => {
                   </p>
                 ) : (
                   <div className="space-y-4">
-                    {promotores.map((promotor) => (
-                      <div key={promotor.id} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <h3 className="font-medium">{promotor.nome_completo}</h3>
-                            <p className="text-sm text-muted-foreground">{promotor.email}</p>
-                            {promotor.telefone && (
-                              <p className="text-sm text-muted-foreground">{promotor.telefone}</p>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant={promotor.ativo ? 'default' : 'secondary'}>
-                              {promotor.ativo ? 'Ativo' : 'Inativo'}
-                            </Badge>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => togglePromotor(promotor)}
-                            >
-                              {promotor.ativo ? 'Desativar' : 'Ativar'}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                     {promotores.map((promotor) => (
+                       <div key={promotor.id} className="border rounded-lg p-4">
+                         <div className="flex items-center justify-between">
+                           <div className="space-y-1">
+                             <div className="flex items-center space-x-2">
+                               <h3 className="font-medium">{promotor.nome_completo}</h3>
+                               <Badge variant={promotor.tipo_usuario === 'admin' ? 'destructive' : 'outline'}>
+                                 {promotor.tipo_usuario === 'admin' ? (
+                                   <>
+                                     <Shield className="mr-1 h-3 w-3" />
+                                     Admin
+                                   </>
+                                 ) : (
+                                   <>
+                                     <UserPlus className="mr-1 h-3 w-3" />
+                                     Promotor
+                                   </>
+                                 )}
+                               </Badge>
+                             </div>
+                             <p className="text-sm text-muted-foreground">{promotor.email}</p>
+                             {promotor.telefone && (
+                               <p className="text-sm text-muted-foreground">{promotor.telefone}</p>
+                             )}
+                           </div>
+                           <div className="flex items-center space-x-2">
+                             <Badge variant={promotor.ativo ? 'default' : 'secondary'}>
+                               {promotor.ativo ? 'Ativo' : 'Inativo'}
+                             </Badge>
+                             
+                             {/* Botão de promoção/rebaixamento */}
+                             {promotor.tipo_usuario === 'promotor' ? (
+                               <Button
+                                 size="sm"
+                                 variant="outline"
+                                 onClick={() => promoverUsuario(promotor, 'admin')}
+                                 className="text-primary border-primary hover:bg-primary hover:text-primary-foreground"
+                               >
+                                 <Shield className="mr-1 h-3 w-3" />
+                                 Promover a Admin
+                               </Button>
+                             ) : (
+                               <Button
+                                 size="sm"
+                                 variant="outline"
+                                 onClick={() => promoverUsuario(promotor, 'promotor')}
+                                 className="text-orange-600 border-orange-600 hover:bg-orange-600 hover:text-white"
+                               >
+                                 <UserPlus className="mr-1 h-3 w-3" />
+                                 Rebaixar a Promotor
+                               </Button>
+                             )}
+                             
+                             <Button
+                               size="sm"
+                               variant="outline"
+                               onClick={() => togglePromotor(promotor)}
+                             >
+                               {promotor.ativo ? 'Desativar' : 'Ativar'}
+                             </Button>
+                           </div>
+                         </div>
+                       </div>
+                     ))}
                   </div>
                 )}
               </CardContent>
