@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import SolicitarAdiantamento from '@/components/forms/SolicitarAdiantamento';
 import SolicitarReembolsoKm from '@/components/forms/SolicitarReembolsoKm';
 import SolicitarValeRefeicao from '@/components/forms/SolicitarValeRefeicao';
+import SolicitarAtestado from '@/components/forms/SolicitarAtestado';
 
 interface Adiantamento {
   id: string;
@@ -34,6 +35,15 @@ interface ValeRefeicao {
   status: string;
 }
 
+interface Atestado {
+  id: string;
+  data_inicio: string;
+  data_fim: string;
+  motivo: string;
+  status: string;
+  created_at: string;
+}
+
 const PromotorDashboard = () => {
   const { profile, signOut } = useAuth();
   const { toast } = useToast();
@@ -41,6 +51,7 @@ const PromotorDashboard = () => {
   const [adiantamentos, setAdiantamentos] = useState<Adiantamento[]>([]);
   const [reembolsos, setReembolsos] = useState<ReembolsoKm[]>([]);
   const [vales, setVales] = useState<ValeRefeicao[]>([]);
+  const [atestados, setAtestados] = useState<Atestado[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [showAdiantamento, setShowAdiantamento] = useState(false);

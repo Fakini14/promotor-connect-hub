@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Users, DollarSign, Clock, CheckCircle, UserPlus, Shield } from 'lucide-react';
+import { LogOut, Users, DollarSign, Clock, CheckCircle, UserPlus, Shield, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import AtestadoViewer from '@/components/ui/AtestadoViewer';
 
 interface Solicitacao {
   id: string;
@@ -41,6 +42,8 @@ const AdminDashboard = () => {
   const [solicitacoesPendentes, setSolicitacoesPendentes] = useState<Solicitacao[]>([]);
   const [promotores, setPromotores] = useState<Promotor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [atestadoSelecionado, setAtestadoSelecionado] = useState<any>(null);
+  const [modalAtestado, setModalAtestado] = useState(false);
 
   useEffect(() => {
     carregarDados();
@@ -228,7 +231,8 @@ const AdminDashboard = () => {
     const tipos = {
       adiantamento: 'Adiantamento',
       reembolso_km: 'Reembolso KM',
-      vale_refeicao: 'Vale Refeição'
+      vale_refeicao: 'Vale Refeição',
+      atestado: 'Atestado'
     };
     return tipos[tipo as keyof typeof tipos] || tipo;
   };
@@ -472,6 +476,15 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modal de Atestado */}
+      <AtestadoViewer
+        atestado={atestadoSelecionado}
+        open={modalAtestado}
+        onOpenChange={setModalAtestado}
+        isAdmin={true}
+        onStatusChange={carregarDados}
+      />
     </div>
   );
 };
