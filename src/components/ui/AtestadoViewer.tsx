@@ -124,17 +124,15 @@ const AtestadoViewer = ({
     try {
       setActionLoading(novoStatus);
       
-      // Temporariamente comentado até migração ser aplicada
-      // const { error } = await supabase
-      //   .from('atestados')
-      //   .update({ 
-      //     status: novoStatus,
-      //     data_aprovacao: new Date().toISOString()
-      //   })
-      //   .eq('id', atestado.id);
+      const { error } = await supabase
+        .from('atestados')
+        .update({ 
+          status: novoStatus,
+          data_aprovacao: new Date().toISOString()
+        })
+        .eq('id', atestado.id);
 
-      // if (error) throw error;
-      const error = null; // Temporário
+      if (error) throw error;
 
       toast({
         title: 'Sucesso',

@@ -58,6 +58,45 @@ export type Database = {
           },
         ]
       }
+      atestados: {
+        Row: {
+          arquivo_url: string
+          created_at: string
+          data_aprovacao: string | null
+          data_fim: string
+          data_inicio: string
+          id: string
+          motivo: string
+          promotor_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_url: string
+          created_at?: string
+          data_aprovacao?: string | null
+          data_fim: string
+          data_inicio: string
+          id?: string
+          motivo: string
+          promotor_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_url?: string
+          created_at?: string
+          data_aprovacao?: string | null
+          data_fim?: string
+          data_inicio?: string
+          id?: string
+          motivo?: string
+          promotor_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           ativo: boolean
