@@ -19,7 +19,6 @@ const Index = () => {
     return <div className="min-h-screen flex items-center justify-center text-primary">Carregando...</div>;
   }
 
-  console.log('Index page - user:', user, 'loading:', loading);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/20">

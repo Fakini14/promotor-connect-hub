@@ -3,10 +3,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Users, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { DataCard } from '@/components/ui/data-card';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Badge } from '@/components/ui/badge';
+import { Users, DollarSign, Clock, CheckCircle, FileX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrency } from '@/hooks/use-currency';
+import UserMenu from '@/components/ui/user-menu';
 
 interface Solicitacao {
   id: string;
@@ -34,8 +39,9 @@ interface Promotor {
 }
 
 const AdminDashboard = () => {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const { toast } = useToast();
+  const { format } = useCurrency();
   
   const [solicitacoesPendentes, setSolicitacoesPendentes] = useState<Solicitacao[]>([]);
   const [promotores, setPromotores] = useState<Promotor[]>([]);
@@ -190,13 +196,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await signOut();
-    toast({
-      title: 'Logout realizado',
-      description: 'Você foi desconectado com sucesso.',
-    });
-  };
 
   const formatarTipo = (tipo: string) => {
     const tipos = {
@@ -209,9 +208,9 @@ const AdminDashboard = () => {
 
   const formatarValor = (solicitacao: Solicitacao) => {
     if (solicitacao.tipo === 'reembolso_km') {
-      return `${solicitacao.km_rodados} km - R$ ${solicitacao.valor_total?.toFixed(2)}`;
+      return `${solicitacao.km_rodados} km - ${format(solicitacao.valor_total || 0)}`;
     }
-    return `R$ ${(solicitacao.valor || 0).toFixed(2)}`;
+    return format(solicitacao.valor || 0);
   };
 
   if (loading) {
@@ -227,10 +226,7 @@ const AdminDashboard = () => {
             <h1 className="text-2xl font-bold text-primary">Portal do Promotor DMC - Admin</h1>
             <p className="text-muted-foreground">Painel Administrativo - {profile?.nome_completo}</p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </Button>
+          <UserMenu />
         </div>
       </header>
 
@@ -248,52 +244,30 @@ const AdminDashboard = () => {
           <TabsContent value="solicitacoes" className="space-y-6">
             {/* Cards de Resumo */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-warning">
-                    {solicitacoesPendentes.length}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Aguardando aprovação
-                  </p>
-                </CardContent>
-              </Card>
+              <DataCard
+                title="Pendentes"
+                value={solicitacoesPendentes.length}
+                description="Aguardando aprovação"
+                icon={Clock}
+                color="warning"
+              />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-primary">
-                    R$ {solicitacoesPendentes
-                      .reduce((total, s) => total + (s.valor_total || s.valor), 0)
-                      .toFixed(2)}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Valor total pendente
-                  </p>
-                </CardContent>
-              </Card>
+              <DataCard
+                title="Valor Total"
+                value={format(solicitacoesPendentes
+                  .reduce((total, s) => total + (s.valor_total || s.valor || 0), 0))}
+                description="Valor total pendente"
+                icon={DollarSign}
+                color="primary"
+              />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Promotores Ativos</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-success">
-                    {promotores.filter(p => p.ativo).length}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    De {promotores.length} total
-                  </p>
-                </CardContent>
-              </Card>
+              <DataCard
+                title="Promotores Ativos"
+                value={promotores.filter(p => p.ativo).length}
+                description={`De ${promotores.length} total`}
+                icon={Users}
+                color="success"
+              />
             </div>
 
             {/* Lista de Solicitações */}
@@ -306,9 +280,11 @@ const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 {solicitacoesPendentes.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    Nenhuma solicitação pendente
-                  </p>
+                  <EmptyState
+                    icon={FileX}
+                    title="Nenhuma solicitação pendente"
+                    description="Todas as solicitações foram processadas"
+                  />
                 ) : (
                   <div className="space-y-4">
                     {solicitacoesPendentes.map((solicitacao) => (
@@ -316,9 +292,10 @@ const AdminDashboard = () => {
                         <div className="flex items-center justify-between">
                           <div className="space-y-2">
                             <div className="flex items-center space-x-2">
-                              <Badge variant="outline">
+                              <StatusBadge status="pendente" />
+                              <span className="text-sm font-medium text-gray-600">
                                 {formatarTipo(solicitacao.tipo)}
-                              </Badge>
+                              </span>
                               <span className="font-medium">
                                 {solicitacao.promotor?.nome_completo}
                               </span>

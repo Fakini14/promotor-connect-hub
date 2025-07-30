@@ -3,13 +3,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { LogOut, DollarSign, Car, UtensilsCrossed, Plus, Eye } from 'lucide-react';
+import { DataCard } from '@/components/ui/data-card';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { DollarSign, Car, UtensilsCrossed, Plus, Eye, Receipt, FileText, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrency } from '@/hooks/use-currency';
+import UserMenu from '@/components/ui/user-menu';
 import SolicitarAdiantamento from '@/components/forms/SolicitarAdiantamento';
 import SolicitarReembolsoKm from '@/components/forms/SolicitarReembolsoKm';
 import SolicitarValeRefeicao from '@/components/forms/SolicitarValeRefeicao';
+import { useNavigate } from 'react-router-dom';
 
 interface Adiantamento {
   id: string;
@@ -35,8 +40,10 @@ interface ValeRefeicao {
 }
 
 const PromotorDashboard = () => {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const { toast } = useToast();
+  const { format } = useCurrency();
+  const navigate = useNavigate();
   
   const [adiantamentos, setAdiantamentos] = useState<Adiantamento[]>([]);
   const [reembolsos, setReembolsos] = useState<ReembolsoKm[]>([]);
@@ -95,26 +102,13 @@ const PromotorDashboard = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const colors = {
-      pendente: 'default',
-      aprovado: 'default',
-      recusado: 'destructive',
-    };
-    
     return (
-      <Badge variant={colors[status as keyof typeof colors] as any}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
+      <StatusBadge 
+        status={status as 'pendente' | 'aprovado' | 'recusado' | 'pago'} 
+      />
     );
   };
 
-  const handleLogout = async () => {
-    await signOut();
-    toast({
-      title: 'Logout realizado',
-      description: 'Você foi desconectado com sucesso.',
-    });
-  };
 
   if (loading) {
     return <div className="p-6">Carregando...</div>;
@@ -129,64 +123,39 @@ const PromotorDashboard = () => {
             <h1 className="text-2xl font-bold text-primary">Portal do Promotor DMC</h1>
             <p className="text-muted-foreground">Bem-vindo, {profile?.nome_completo}</p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </Button>
+          <UserMenu />
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Cards de Resumo */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Saldo Adiantamentos</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">
-                R$ {calcularSaldoAdiantamentos().toFixed(2)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Total aprovado disponível
-              </p>
-            </CardContent>
-          </Card>
+          <DataCard
+            title="Saldo Adiantamentos"
+            value={format(calcularSaldoAdiantamentos())}
+            description="Total aprovado disponível"
+            icon={DollarSign}
+            color="primary"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Solicitações Pendentes</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-warning">
-                {[...adiantamentos, ...reembolsos, ...vales].filter(item => item.status === 'pendente').length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Aguardando aprovação
-              </p>
-            </CardContent>
-          </Card>
+          <DataCard
+            title="Solicitações Pendentes"
+            value={[...adiantamentos, ...reembolsos, ...vales].filter(item => item.status === 'pendente').length}
+            description="Aguardando aprovação"
+            icon={Eye}
+            color="warning"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Últimos Reembolsos</CardTitle>
-              <Car className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-success">
-                R$ {reembolsos
-                  .filter(r => r.status === 'aprovado')
-                  .slice(0, 3)
-                  .reduce((total, r) => total + r.valor_total, 0)
-                  .toFixed(2)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Últimos 3 aprovados
-              </p>
-            </CardContent>
-          </Card>
+          <DataCard
+            title="Últimos Reembolsos"
+            value={format(reembolsos
+              .filter(r => r.status === 'aprovado')
+              .slice(0, 3)
+              .reduce((total, r) => total + r.valor_total, 0))}
+            description="Últimos 3 aprovados"
+            icon={Car}
+            color="success"
+          />
         </div>
 
         {/* Ações Rápidas */}
@@ -210,6 +179,14 @@ const PromotorDashboard = () => {
               <UtensilsCrossed className="mr-2 h-4 w-4" />
               Vale Refeição
             </Button>
+            <Button variant="outline" onClick={() => navigate('/atestados')}>
+              <FileText className="mr-2 h-4 w-4" />
+              Atestados
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/pedidos-compra')}>
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Pedidos de Compra
+            </Button>
           </CardContent>
         </Card>
 
@@ -232,7 +209,7 @@ const PromotorDashboard = () => {
                       <div className="flex items-center space-x-3">
                         <DollarSign className="h-5 w-5 text-primary" />
                         <div>
-                          <p className="font-medium">R$ {adiantamento.valor.toFixed(2)}</p>
+                          <p className="font-medium">{format(adiantamento.valor)}</p>
                           <p className="text-sm text-muted-foreground">
                             {new Date(adiantamento.data_solicitacao).toLocaleDateString('pt-BR')}
                           </p>
@@ -257,7 +234,7 @@ const PromotorDashboard = () => {
                       <div className="flex items-center space-x-3">
                         <Car className="h-5 w-5 text-primary" />
                         <div>
-                          <p className="font-medium">{reembolso.km_rodados} km - R$ {reembolso.valor_total.toFixed(2)}</p>
+                          <p className="font-medium">{reembolso.km_rodados} km - {format(reembolso.valor_total)}</p>
                           <p className="text-sm text-muted-foreground">
                             {new Date(reembolso.data).toLocaleDateString('pt-BR')}
                           </p>
@@ -282,7 +259,7 @@ const PromotorDashboard = () => {
                       <div className="flex items-center space-x-3">
                         <UtensilsCrossed className="h-5 w-5 text-primary" />
                         <div>
-                          <p className="font-medium">R$ {vale.valor.toFixed(2)}</p>
+                          <p className="font-medium">{format(vale.valor)}</p>
                           <p className="text-sm text-muted-foreground">
                             {new Date(vale.data).toLocaleDateString('pt-BR')}
                           </p>
@@ -296,9 +273,15 @@ const PromotorDashboard = () => {
             )}
 
             {adiantamentos.length === 0 && reembolsos.length === 0 && vales.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                Nenhuma transação encontrada
-              </p>
+              <EmptyState
+                icon={Receipt}
+                title="Nenhuma transação encontrada"
+                description="Suas solicitações aparecerão aqui quando forem criadas"
+                action={{
+                  label: "Fazer primeira solicitação",
+                  onClick: () => setShowAdiantamento(true)
+                }}
+              />
             )}
           </CardContent>
         </Card>

@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import ForgotPasswordDialog from '@/components/ui/forgot-password-dialog';
+import ResendEmailDialog from '@/components/ui/resend-email-dialog';
 
 const Auth = () => {
   const { signIn, signUp, user, loading } = useAuth();
@@ -16,6 +18,8 @@ const Auth = () => {
   const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResendEmail, setShowResendEmail] = useState(false);
   const [loginData, setLoginData] = useState({
     email: '',
     password: '',
@@ -83,8 +87,15 @@ const Auth = () => {
         });
       } else {
         toast({
-          title: 'Cadastro realizado com sucesso',
-          description: 'Verifique seu e-mail para confirmar a conta.',
+          title: 'Cadastro realizado com sucesso!',
+          description: 'Verifique sua caixa de entrada e confirme seu email para acessar o sistema.',
+        });
+        // Limpar formulário após sucesso
+        setSignupData({
+          email: '',
+          password: '',
+          nome_completo: '',
+          tipo_usuario: 'promotor',
         });
       }
     } catch (error) {
@@ -156,6 +167,26 @@ const Auth = () => {
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Entrar
                   </Button>
+                  <div className="text-center mt-4 space-y-2">
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-sm text-muted-foreground hover:text-primary"
+                      onClick={() => setShowForgotPassword(true)}
+                    >
+                      Esqueceu sua senha?
+                    </Button>
+                    <div>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="text-sm text-muted-foreground hover:text-primary"
+                        onClick={() => setShowResendEmail(true)}
+                      >
+                        Não recebeu o email de confirmação?
+                      </Button>
+                    </div>
+                  </div>
                 </form>
               </TabsContent>
               
@@ -220,6 +251,16 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
+
+        <ForgotPasswordDialog 
+          open={showForgotPassword} 
+          onOpenChange={setShowForgotPassword} 
+        />
+        
+        <ResendEmailDialog 
+          open={showResendEmail} 
+          onOpenChange={setShowResendEmail} 
+        />
       </div>
     </div>
   );
